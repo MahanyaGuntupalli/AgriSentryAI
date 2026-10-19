@@ -1,80 +1,140 @@
-# AgriSentry AI
+<div align="center">
+  <img src="mobile/assets/branding/agrisentry_icon.png" alt="AgriSentry AI leaf shield logo" width="150" />
+  <h1>🌱 AgriSentry AI</h1>
+  <p><strong>See the crop. Understand the conditions. Decide what to do next.</strong></p>
+  <p>
+    <img alt="FastAPI" src="https://img.shields.io/badge/API-FastAPI-009688?logo=fastapi&logoColor=white" />
+    <img alt="Flutter" src="https://img.shields.io/badge/App-Flutter-02569B?logo=flutter&logoColor=white" />
+    <img alt="ESP32" src="https://img.shields.io/badge/Hardware-ESP32-E7352C?logo=espressif&logoColor=white" />
+  </p>
+</div>
 
-Farmer-focused intelligent crop monitoring. SEE -> UNDERSTAND -> PREDICT -> EXPLAIN -> PREVENT.
+AgriSentry AI is a crop-monitoring prototype that brings leaf scans, local sensor readings, weather context, and practical explanations into one place. Start with the software simulator; connect an ESP32 sensor node when you are ready.
 
-## Quick start (software MVP, no hardware needed)
+> **Prototype status:** Disease and crop model integration points are included. Until trained model files are supplied, the backend labels uncertain or unavailable predictions instead of presenting them as confirmed diagnoses. Weather and sensor readings identify whether their source is real or simulated.
 
-Use this `Zip2/AgriSentryAI` folder as the single project. The older `zip 1`
-folder is not a second service to start; its AI module has been copied into
-`ai/` here and is used automatically when a trained model is present.
+## 🌾 What it can do
 
-```bash
-# 1. Backend (Windows PowerShell)
-cd backend
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-Copy-Item .env.example .env                           # optional; simulated mode works out of the box
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+- **Scan a leaf:** Send a crop image to the backend for image-quality checks and analysis.
+- **Read growing conditions:** Use live ESP32 readings or a simulated sensor feed for temperature, humidity, soil moisture, and light.
+- **Assess environmental risk:** Combine available sensor and weather context into a risk estimate.
+- **Explain recommendations:** Show the factors behind an assessment and practical next steps.
+- **Review activity:** Keep scan and sensor history available to the app.
+- **Train the tomato model:** Use the training workflow in [`ai/TRAINING_GUIDE.md`](ai/TRAINING_GUIDE.md) when you have the dataset and training dependencies.
 
-# 2. Simulated sensor feed (new terminal)
-python integration\test_data\simulate_sensor.py --url http://localhost:8000 --interval 10
+## 🧭 How the pieces fit
 
-# 3. API tests (new terminal)
-python integration\api_tests\test_api.py
-
-# 4. Flutter app
-cd mobile
-flutter pub get
-flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000   # Android emulator -> host PC
+```mermaid
+flowchart LR
+    Farmer[Farmer] --> App[Flutter app]
+    App -->|Image scans and requests| API[FastAPI backend]
+    Sim[Sensor simulator] -->|Sensor readings| API
+    ESP[ESP32 sensor node] -->|Sensor readings| API
+    API --> Risk[Risk and explanation services]
+    API --> Models[Crop and disease model hooks]
+    API --> Weather[Real or simulated weather]
+    API --> DB[(Local SQLite history)]
+    Risk --> App
+    Models --> API
+    Weather --> API
 ```
 
-For a physical phone, replace `10.0.2.2` with the computer's LAN IP and keep
-the backend bound to `0.0.0.0`.
+## 🚀 Run the software MVP
 
-Interactive API docs: http://localhost:8000/docs
+You need Python, Flutter, and an Android emulator or device. Hardware is optional. Open PowerShell at the repository root.
 
-## API summary
+### 1. Start the backend
 
-| Method | Endpoint | Purpose |
+```powershell
+Set-Location backend
+py -3 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+The default weather mode is simulated, so the backend can start without an API key. Interactive API documentation is at [http://localhost:8000/docs](http://localhost:8000/docs).
+
+### 2. Send simulated sensor readings
+
+Open a second PowerShell window at the repository root:
+
+```powershell
+.\backend\.venv\Scripts\python.exe integration\test_data\simulate_sensor.py --url http://localhost:8000 --interval 10
+```
+
+### 3. Run the Flutter app
+
+Open a third PowerShell window:
+
+```powershell
+Set-Location mobile
+flutter pub get
+flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000
+```
+
+`10.0.2.2` lets the Android emulator reach the backend on your Windows computer. For a physical phone, use your computer's LAN IP address and keep the backend bound to `0.0.0.0`.
+
+### 4. Check the API
+
+With the backend running, use another terminal from the repository root:
+
+```powershell
+.\backend\.venv\Scripts\python.exe integration\api_tests\test_api.py
+```
+
+## 🧠 Model and dataset
+
+The AI code is organized under `ai/`:
+
+- `ai/inference/` — prediction code
+- `ai/preprocessing/` — image preparation
+- `ai/training/` — training pipeline
+- `ai/models/labels.txt` — label order
+
+The training datasets and generated model weights are kept out of GitHub to avoid committing large data and binary artifacts. Follow [`ai/TRAINING_GUIDE.md`](ai/TRAINING_GUIDE.md) to prepare a dataset and train a model. A trained artifact must be present and the backend integration verified before describing predictions as trained or field-ready.
+
+## 🔌 Connect an ESP32 later
+
+The firmware and wiring notes are in [`hardware/`](hardware/). The ESP32 sends readings to the same `/api/sensors/data` endpoint as the simulator. Set its backend URL to your computer's LAN address; `localhost` on the ESP32 points to the board itself.
+
+## 🗺️ API at a glance
+
+| Method | Endpoint | What it does |
 |---|---|---|
-| GET | /api/health | backend alive check |
-| POST | /api/sensors/data | receive ESP32 / simulated sensor JSON |
-| GET | /api/sensors/latest | latest environmental reading |
-| GET | /api/sensors/history | reading history for charts |
-| GET | /api/weather/current | current weather (REAL or SIMULATED, labeled) |
-| POST | /api/risk/assess | environmental risk from sensor+context |
-| POST | /api/future-risk/estimate | 24h/48h/72h prototype estimate |
-| POST | /api/explain | WHY? farmer-friendly explanation |
-| POST | /api/recommend | WHAT TO DO? recommendations |
-| POST | /api/analyze | full multimodal analysis (multipart image) |
-| GET | /api/history | scan history |
+| `GET` | `/api/health` | Backend health check |
+| `POST` | `/api/analyze` | Analyze a submitted crop image |
+| `POST` | `/api/sensors/data` | Receive sensor readings |
+| `GET` | `/api/sensors/latest` | Return the latest sensor reading |
+| `GET` | `/api/sensors/history` | Return sensor history |
+| `GET` | `/api/weather/current` | Return weather context with its source labeled |
+| `POST` | `/api/risk/assess` | Assess environmental risk |
+| `POST` | `/api/future-risk/estimate` | Generate a prototype 24/48/72-hour estimate |
+| `POST` | `/api/explain` | Explain an assessment |
+| `POST` | `/api/recommend` | Return recommended next steps |
+| `GET` | `/api/history` | Return scan history |
 
-## Configuration (backend/.env)
+## 🗂️ Project map
 
-- `WEATHER_MODE=simulated` (default, labeled) or `real` + `WEATHER_API_KEY` (OpenWeatherMap)
-- `DISEASE_MODEL_PATH` - optional path to a trained model. The backend also
-  checks `ai/models/tomato_disease_model.h5`; until a model exists it returns
-  `PLACEHOLDER_SIMULATED` with `NO_RELIABLE_DISEASE` rather than inventing a
-  disease
-- `DEFAULT_LAT` / `DEFAULT_LON` - farm location for weather
+```text
+ai/           Image inference, preprocessing, and model training
+backend/      FastAPI services, API routes, and local database
+hardware/     ESP32 firmware, wiring, and parts list
+integration/ API checks, simulator, and MVP checklist
+mobile/       Flutter application
+```
 
-## Real vs simulated
+## 🔐 Configuration
 
-Every response carrying sensor or weather data includes a `source` field:
-`REAL` (ESP32 / weather API) or `SIMULATED` (development). The Flutter app
-displays a SIMULATED banner so prototype data is never mistaken for live data.
+Copy `backend/.env.example` to `backend/.env` only when you want to change the defaults. For live weather, set `WEATHER_MODE=real` and provide a `WEATHER_API_KEY`. Keep `.env` and other credentials private; the repository `.gitignore` excludes them.
 
-## ESP32 connection (later - hardware swap, no redesign)
+## ⚠️ Prototype notes
 
-1. Flash the firmware from `hardware/firmware/` (hardware team's deliverable).
-2. In the firmware config set the backend URL to your laptop's LAN IP,
-   e.g. `http://192.168.1.20:8000` (NOT localhost - the ESP32 cannot reach it).
-3. The device posts the exact same JSON contract to `/api/sensors/data`
-   with `device_id=ESP32_001` -> automatically stored as `source=REAL`.
-4. Stop `simulate_sensor.py`. Done - the risk engine, app and history
-   keep working unchanged.
+AgriSentry AI is a development project. Simulated inputs are labeled, model outputs depend on locally supplied weights, and prototype risk estimates need field evaluation before being relied on for crop decisions.
 
-## MVP test checklist
+## 📚 More project notes
 
-See `integration/documentation/MVP_CHECKLIST.md` (from the Integration Contract, section 36).
+- [MVP checklist](integration/documentation/MVP_CHECKLIST.md)
+- [AI dataset plan](ai/DATASET_PLAN.md)
+- [Tomato model training guide](ai/TRAINING_GUIDE.md)
+- [Hardware guide](hardware/README.md)
