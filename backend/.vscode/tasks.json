@@ -1,0 +1,70 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "1a. Backend: create virtual environment",
+            "type": "shell",
+            "command": "python -m venv .venv",
+            "problemMatcher": []
+        },
+        {
+            "label": "1b. Backend: install dependencies",
+            "type": "shell",
+            "command": ".\\.venv\\Scripts\\python.exe -m pip install -r requirements.txt",
+            "problemMatcher": []
+        },
+        {
+            "label": "1. Backend: setup environment",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "1a. Backend: create virtual environment",
+                "1b. Backend: install dependencies"
+            ],
+            "problemMatcher": []
+        },
+        {
+          "label": "2. Backend: verify installation",
+    "type": "process",
+    "command": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+    "args": [
+        "-c",
+        "import fastapi, uvicorn; print('Backend dependencies OK')"
+    ],
+    "problemMatcher": [] 
+        },
+        {
+            "label": "START HERE: setup everything (1+2)",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "1. Backend: setup environment",
+                "2. Backend: verify installation"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "3. Backend: run uvicorn (no debug)",
+            "type": "shell",
+            "command": ".\\.venv\\Scripts\\python.exe -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000",
+            "isBackground": true,
+            "problemMatcher": []
+        },
+        {
+            "label": "4. Sensor simulator",
+            "type": "shell",
+            "command": "python ..\\integration\\test_data\\simulate_sensor.py",
+            "problemMatcher": []
+        },
+        {
+            "label": "5. API tests",
+            "type": "shell",
+            "command": "python ..\\integration\\api_tests\\test_api.py",
+            "problemMatcher": []
+        },
+        {
+            "label": "6. AI: install training tools",
+            "type": "shell",
+            "command": ".\\.venv\\Scripts\\python.exe -m pip install tensorflow",
+            "problemMatcher": []
+        }
+    ]
+}

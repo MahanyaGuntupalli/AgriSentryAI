@@ -1,0 +1,59 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "⚙️ Backend: uvicorn (FastAPI)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": ["app.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"],
+      "cwd": "${workspaceFolder:backend}",
+      "jinja": false,
+      "console": "integratedTerminal",
+      "justMyCode": false
+    },
+    {
+      "name": "🔌 Simulate sensor feed",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder:integration}/test_data/simulate_sensor.py",
+      "args": ["--url", "http://localhost:8000", "--interval", "10"],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "🧪 Run API tests",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder:integration}/api_tests/test_api.py",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "📱 Flutter: Android emulator",
+      "type": "dart",
+      "request": "launch",
+      "program": "${workspaceFolder:mobile}/lib/main.dart",
+      "cwd": "${workspaceFolder:mobile}",
+      "flutterMode": "debug",
+      "args": ["--dart-define=API_BASE_URL=http://10.0.2.2:8000"]
+    },
+    {
+      "name": "📱 Flutter: physical phone",
+      "type": "dart",
+      "request": "launch",
+      "program": "${workspaceFolder:mobile}/lib/main.dart",
+      "cwd": "${workspaceFolder:mobile}",
+      "flutterMode": "debug",
+      "args": ["--dart-define=API_BASE_URL=http://YOUR_PC_LAN_IP:8000"]
+    }
+  ],
+  "compounds": [
+    {
+      "name": "🚀 Full system (backend + sensors + app)",
+      "configurations": [
+        "⚙️ Backend: uvicorn (FastAPI)",
+        "🔌 Simulate sensor feed",
+        "📱 Flutter: Android emulator"
+      ]
+    }
+  ]
+}

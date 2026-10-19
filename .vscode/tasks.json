@@ -1,0 +1,69 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "1a. Backend: create venv",
+      "type": "shell",
+      "command": "python -m venv .venv",
+      "options": { "cwd": "${workspaceFolder:backend}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "1b. Backend: install requirements",
+      "type": "shell",
+      "command": ".venv\\Scripts\\python.exe -m pip install -r requirements.txt",
+      "options": { "cwd": "${workspaceFolder:backend}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "1. Backend: create venv + install deps",
+      "dependsOn": ["1a. Backend: create venv", "1b. Backend: install requirements"],
+      "dependsOrder": "sequence",
+      "command": "echo Backend venv ready",
+      "problemMatcher": []
+    },
+    {
+      "label": "2. Mobile: flutter pub get",
+      "type": "shell",
+      "command": "flutter pub get",
+      "options": { "cwd": "${workspaceFolder:mobile}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "3. Backend: run uvicorn (no debug)",
+      "type": "shell",
+      "command": ".venv\\Scripts\\python.exe -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000",
+      "options": { "cwd": "${workspaceFolder:backend}" },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "4. Sensor simulator",
+      "type": "shell",
+      "command": "python ..\\integration\\test_data\\simulate_sensor.py --url http://localhost:8000 --interval 10",
+      "options": { "cwd": "${workspaceFolder:backend}" },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "5. API tests",
+      "type": "shell",
+      "command": "python ..\\integration\\api_tests\\test_api.py",
+      "options": { "cwd": "${workspaceFolder:backend}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "6. AI: install training tools",
+      "type": "shell",
+      "command": ".venv\\Scripts\\python.exe -m pip install \"tensorflow>=2.15\" kagglehub",
+      "options": { "cwd": "${workspaceFolder:backend}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "START HERE: setup everything (1+2)",
+      "dependsOn": ["1. Backend: create venv + install deps", "2. Mobile: flutter pub get"],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    }
+  ]
+}

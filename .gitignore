@@ -1,0 +1,45 @@
+﻿# Python environments and cache
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# Local secrets and settings
+.env
+.env.*
+!**/.env.example
+
+# Local databases and logs
+*.db
+*.sqlite
+*.sqlite3
+*.log
+
+# Downloaded training datasets
+ai/dataset/tomato/
+ai/dataset/crops/
+ai/dataset/_pv_clone/
+
+# Generated model weights
+ai/models/*.h5
+ai/models/*.keras
+ai/models/*.tflite
+ai/models/*.onnx
+
+# Flutter generated files
+**/.dart_tool/
+**/build/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.packages
+mobile/android/local.properties
+mobile/.idea/
+mobile/*.iml
+mobile/flutter_build_error.txt
+mobile/flutter_error.txt
+
+# Operating system files
+.DS_Store
+Thumbs.db
